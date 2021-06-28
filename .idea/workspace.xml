@@ -122,9 +122,9 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.DPCM" />
+        <item itemvalue="Python.huffman" />
         <item itemvalue="Python.gui" />
         <item itemvalue="Python.cc" />
-        <item itemvalue="Python.huffman" />
       </list>
     </recent_temporary>
   </component>
@@ -144,12 +144,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/DPCM.py</url>
-          <line>52</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/DPCM.py</url>
-          <line>165</line>
+          <line>74</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
       </breakpoints>

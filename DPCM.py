@@ -1,11 +1,9 @@
 import cv2
-
 import matplotlib.pyplot as plt
 import pandas as pd
 
 from huffman import *
 from zig_zag_scan import *
-
 
 
 def showImg(img):
@@ -116,10 +114,7 @@ def get_img(blocks, img_shape):
         rowNcol.append(np.hstack(blocks[row:j]))
         row = j
     res = np.vstack(rowNcol)
-    res[res > 255] = 255
-    res[res < 0] = 0
 
-    # showImg(res)
     return res
 
 
@@ -197,7 +192,7 @@ def dpcm(blocks, delta):
             re = recontruct[i - 1] + single_block_de_quantization(tmp_err, delta)
             recontruct.append(re)
 
-    return np.ceil(np.asarray(err).astype(int) / 1) * 1
+    return err
 
 
 def inv_dpcm(err, delta):
@@ -216,15 +211,12 @@ def encoder(img, delta):
     block_size = 8
     blocks = split_into_blocks(img, block_size)
     dct = DCT(blocks)
-    # q_dct = block_quantization(dct, delta)
-    # print(dct)
     q_pred = dpcm(dct, delta)
     zz = []
     for block in q_pred:
         zz.append(zigzag(block))
     RL = runLength_encoding(np.array(zz))
     return RL
-
 
 def decoder(bit_stream, delta):
     RLD = runLength_decoding(bit_stream)
@@ -234,21 +226,17 @@ def decoder(bit_stream, delta):
     for i in range(0, len(RLD) - block_size * block_size + 1, block_size * block_size):
         inv_zz.append(inverse_zigzag(np.array(RLD[i:i + block_size * block_size]), 8, 8))
     q_reconstruct = inv_dpcm(inv_zz, delta)
-    # q_reconstruct = de_quantization(q_reconstruct,delta)
     out_idct = IDCT(q_reconstruct)
-    # out_dq = de_quantization(out, delta)
-
-    # get_img(out_idct)
     return out_idct
+
+
 
 
 def Entropy(data):
     data = data.flatten()  # Chuyen ve 1 chieu
-
     pd_series = pd.Series(data)
     counts = pd_series.value_counts()
     data_entropy = entropy(counts)
-
     return data_entropy
 
 
@@ -288,19 +276,19 @@ for delta in (deltas):
 
 img = cv2.imread(file_name, 0)
 
-ax[0,0].imshow(img,cmap = 'gray')
-ax[0,0].set_title('original')
-ax[0,0].axis('off')
+ax[0, 0].imshow(img, cmap='gray')
+ax[0, 0].set_title('original')
+ax[0, 0].axis('off')
 
-ax[0,1].imshow(imgs[0],cmap = 'gray')
-ax[0,1].set_title('delta = 20')
-ax[0,1].axis('off')
+ax[0, 1].imshow(imgs[0], cmap='gray')
+ax[0, 1].set_title('delta = 20')
+ax[0, 1].axis('off')
 
-ax[1,0].imshow(imgs[1],cmap = 'gray')
-ax[1,0].set_title('delta = 50')
-ax[1,0].axis('off')
+ax[1, 0].imshow(imgs[1], cmap='gray')
+ax[1, 0].set_title('delta = 50')
+ax[1, 0].axis('off')
 
-ax[1,1].imshow(imgs[2],cmap = 'gray')
-ax[1,1].set_title('delta = 90')
-ax[1,1].axis('off')
-plt.show()
+ax[1, 1].imshow(imgs[2], cmap='gray')
+ax[1, 1].set_title('delta = 90')
+ax[1, 1].axis('off')
+# plt.show()
