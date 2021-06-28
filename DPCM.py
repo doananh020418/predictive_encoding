@@ -1,7 +1,12 @@
+import cv2
+
 import matplotlib.pyplot as plt
 import pandas as pd
+
 from huffman import *
 from zig_zag_scan import *
+
+
 
 def showImg(img):
     plt.figure()
@@ -93,12 +98,15 @@ def block_quantization(blocks, delta):
                 block[i, j] = np.around(block[i, j] / q_matrix[i, j])
     return blocks
 
+
 def single_block_quantization(block, delta):
     q_matrix = QMatrix_generator(delta)
     for i in range(block.shape[0]):
         for j in range(block.shape[0]):
             block[i, j] = np.around(block[i, j] / q_matrix[i, j])
     return block
+
+
 def get_img(blocks, img_shape):
     row = 0
     rowNcol = []
@@ -108,8 +116,8 @@ def get_img(blocks, img_shape):
         rowNcol.append(np.hstack(blocks[row:j]))
         row = j
     res = np.vstack(rowNcol)
-    res[res>255]=255
-    res[res<0]=0
+    res[res > 255] = 255
+    res[res < 0] = 0
 
     # showImg(res)
     return res
@@ -159,6 +167,7 @@ def de_quantization(blocks, delta):
         de_quantized.append(np.multiply(block, q_matrix))
     return de_quantized
 
+
 def single_block_de_quantization(block, delta):
     q_matrix = QMatrix_generator(delta)
     return np.multiply(block, q_matrix)
@@ -169,8 +178,9 @@ def OverflowX(block, High, Low):
         if (x > High):
             x = High
         elif (x < Low):
-            x =  Low
+            x = Low
     return block
+
 
 def dpcm(blocks, delta):
     err = []
@@ -178,7 +188,7 @@ def dpcm(blocks, delta):
     for i, block in enumerate(blocks):
         if i == 0:
             e = block
-            e = single_block_quantization(e,delta)
+            e = single_block_quantization(e, delta)
             err.append(e)
             recontruct.append(block)
         else:
@@ -187,43 +197,46 @@ def dpcm(blocks, delta):
             re = recontruct[i - 1] + single_block_de_quantization(tmp_err, delta)
             recontruct.append(re)
 
-    return np.ceil(np.asarray(err).astype(int)/1)*1
+    return np.ceil(np.asarray(err).astype(int) / 1) * 1
 
 
 def inv_dpcm(err, delta):
     reconstruct = []
     for i, e in enumerate(err):
         if i == 0:
-            err = single_block_de_quantization(e,delta)
+            err = single_block_de_quantization(e, delta)
             reconstruct.append(err)
         else:
             re = single_block_de_quantization(e, delta) + reconstruct[i - 1]
             reconstruct.append(re)
     return reconstruct
+
+
 def encoder(img, delta):
     block_size = 8
     blocks = split_into_blocks(img, block_size)
     dct = DCT(blocks)
-    #q_dct = block_quantization(dct, delta)
-    #print(dct)
-    q_pred = dpcm(dct,delta)
-    zz= []
+    # q_dct = block_quantization(dct, delta)
+    # print(dct)
+    q_pred = dpcm(dct, delta)
+    zz = []
     for block in q_pred:
         zz.append(zigzag(block))
     RL = runLength_encoding(np.array(zz))
     return RL
 
+
 def decoder(bit_stream, delta):
     RLD = runLength_decoding(bit_stream)
-    #out = resh(RLD)
+    # out = resh(RLD)
     inv_zz = []
     block_size = 8
     for i in range(0, len(RLD) - block_size * block_size + 1, block_size * block_size):
         inv_zz.append(inverse_zigzag(np.array(RLD[i:i + block_size * block_size]), 8, 8))
     q_reconstruct = inv_dpcm(inv_zz, delta)
-    #q_reconstruct = de_quantization(q_reconstruct,delta)
+    # q_reconstruct = de_quantization(q_reconstruct,delta)
     out_idct = IDCT(q_reconstruct)
-    #out_dq = de_quantization(out, delta)
+    # out_dq = de_quantization(out, delta)
 
     # get_img(out_idct)
     return out_idct
@@ -238,12 +251,11 @@ def Entropy(data):
 
     return data_entropy
 
+
 block = 8
 
-import os
 
-
-def save_img(path,delta = 20):
+def save_img(path, delta=20):
     img = cv2.imread(path, 0)
     img = padding(img, block)
     bit_stream = encoder(img, delta)
@@ -259,8 +271,36 @@ def save_img(path,delta = 20):
     decoded_img = decoder(decoded_bit_stream, delta)
     reconstructed_image = get_img(decoded_img, img.shape)
     plt.imsave("data/reconstructed_image" + str(delta) + ".png", reconstructed_image, cmap='gray')
-    return os.path.join('./','data/reconstructed_image'+str(delta)+".png")
+    output = os.path.join(os.path.abspath(os.getcwd()), 'data\\reconstructed_image' + str(delta) + ".png")
+
+    return plt.imread("data/reconstructed_image" + str(delta) + ".png")
+
+
 file_name = 'data/uncompressed.bmp'
-deltas = [20,50,90]
-for delta in deltas:
-    save_img(file_name,delta)
+img = cv2.imread(file_name, 0)
+deltas = [20, 50, 90]
+
+fig, ax = plt.subplots(2, 2)
+imgs = []
+for delta in (deltas):
+    im = save_img(file_name, delta)
+    imgs.append(im)
+
+img = cv2.imread(file_name, 0)
+
+ax[0,0].imshow(img,cmap = 'gray')
+ax[0,0].set_title('original')
+ax[0,0].axis('off')
+
+ax[0,1].imshow(imgs[0],cmap = 'gray')
+ax[0,1].set_title('delta = 20')
+ax[0,1].axis('off')
+
+ax[1,0].imshow(imgs[1],cmap = 'gray')
+ax[1,0].set_title('delta = 50')
+ax[1,0].axis('off')
+
+ax[1,1].imshow(imgs[2],cmap = 'gray')
+ax[1,1].set_title('delta = 90')
+ax[1,1].axis('off')
+plt.show()

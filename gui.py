@@ -1,6 +1,7 @@
 import PySimpleGUI as sg
-import os.path
+
 from DPCM import *
+
 # First the window layout in 2 columns
 
 
@@ -41,13 +42,13 @@ while True:
     # Folder name was filled in, make a list of files in the folder
     if event == "-FILE-":
         file = values["-FILE-"]
-    #if event == "-TOUT2-":  # A file was chosen from the listbox
+        # if event == "-TOUT2-":  # A file was chosen from the listbox
         try:
             filename = file
             print(filename)
             window["-SHOW-"].update(filename=filename)
             path = save_img(filename)
-            window["-IMAGE-"].update(filename = path)
+            window["-IMAGE-"].update(filename=path)
 
         except:
             pass
