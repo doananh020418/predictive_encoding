@@ -1,98 +1,4 @@
-# def OverflowX(x, High, Low):
-#     if (x > High):
-#         return High
-#     elif (x < Low):
-#         return Low
-#     else:
-#         return x
-#
-# def MSE(YOrigi, YRestr, height, width):
-#     size = height * width
-#     sum = 0
-#     for i in range(size):
-#         temp = (YOrigi[i] - YRestr[i]) * (YOrigi[i] - YRestr[i])
-#         sum += temp
-#     mean = sum / size
-#     return mean
-#
-#
-# def ErrorQuantity(X, bits):
-#     X = X + 255
-#     X = X / 2
-#     X = np.floor(X / pow(2, 8 - bits))
-#     X = X * pow(2, 8 - bits)
-#     X = OverflowX(X, 255, 0)
-#     return X
-#
-#
-# def invErrorQuantity(X, bits):
-#     X = X * 2
-#     X = X - 255
-#     return X
-#
-#
-# def DPCM_Pixel(YOrigi, YError, YRestr, pre, j, bits):
-#     if j == 0:
-#         E_temp = 128 - YOrigi[pre + j]
-#         E_temp = ErrorQuantity(E_temp, bits)
-#         YError[pre + j] = E_temp
-#         E_temp = invErrorQuantity(E_temp, bits)
-#         R_temp = 128 - E_temp
-#         R_temp = OverflowX(R_temp, 255, 0)
-#         YRestr[pre + j] = R_temp
-#     else:
-#         E_temp = YOrigi[pre + j] - YRestr[pre + j - 1]
-#         E_temp = ErrorQuantity(E_temp, bits)
-#         YError[pre + j] = E_temp
-#         E_temp = invErrorQuantity(E_temp, bits)
-#         R_temp = E_temp + YRestr[pre + j - 1]
-#         R_temp = OverflowX(R_temp, 255, 0)
-#         YRestr[pre + j] = R_temp
-#     return YError,YRestr
-#
-# def RDPCM_Pixel(YError, YRestr, pre, j, bits):
-#     if j == 0:
-#         E_temp = YError[pre + j]
-#         E_temp = invErrorQuantity(E_temp, bits)
-#         R_temp = 128 - E_temp
-#         R_temp = OverflowX(R_temp, 255, 0)
-#         YRestr[pre + j] = R_temp
-#     else:
-#         E_temp = YError[pre + j]
-#         E_temp = invErrorQuantity(E_temp, bits)
-#         R_temp = E_temp + YRestr[pre + j - 1]
-#         R_temp = OverflowX(R_temp, 255, 0)
-#         YRestr[pre + j] = R_temp
-#     return YRestr
-#
-# def DPCM(YOrigi,height, width, bits):
-#     YError = []
-#     YRestr = []
-#     for i in range(height):
-#         for j in range(width):
-#             e,r = DPCM_Pixel(YOrigi, YError, YRestr, i * width, j, bits)
-#             YError.append(e)
-#             YRestr.append(r)
-#     return YError,YRestr
-#
-# def RDPCM(YError, height, width, bits):
-#     YRestr = []
-#     for i in range(height):
-#         for j in range(width):
-#             r = RDPCM_Pixel(YError, YRestr, i * width, j, bits)
-#             YRestr.append(r)
-#     return YRestr
-#
-# def PSNR(YOrigi, YRestr, height, width):
-#     fmax = pow(2, 8) - 1
-#     a = fmax * fmax
-#     mean_se = MSE(YOrigi, YRestr, height, width)
-#     peak_SNR = 10 * np.log10(a / mean_se)
-#     return peak_SNR
-
-import cv2
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 from huffman import *
 from zig_zag_scan import *
@@ -322,6 +228,7 @@ def decoder(bit_stream, delta):
     # get_img(out_idct)
     return out_idct
 
+
 def Entropy(data):
     data = data.flatten()  # Chuyen ve 1 chieu
 
@@ -332,51 +239,10 @@ def Entropy(data):
     return data_entropy
 
 block = 8
-# file_name = 'data/uncompressed.bmp'
-# img = cv2.imread(file_name, 0)
-# img = padding(img, block)
-# # cv2.imwrite("land2_gray_org.bmp",img)
-# # cv2.imshow("origin",img)
-# img_shape = img.shape
-# print(img_shape)
-
 
 import os
 
-# file_size = os.path.getsize(file_name)
-# Q = []
-# psnr = []
-# deltas = [90]
-# ratio = []
-# for delta in deltas:
-#     bit_stream = encoder(img, delta)
-#     HC = HuffmanCoding()
-#     bit = HC.compress(bit_stream)
-#
-#     file1 = open("data/bit_stream" + str(delta) + ".txt", "wb")
-#     file1.write(bit)
-#     file1.close()
-#
-#     decoded_bit_stream = HC.decompress("data/bit_stream" + str(delta) + ".txt")
-#
-#     decoded_img = decoder(decoded_bit_stream, delta)
-#     reconstructed_image = get_img(decoded_img, img_shape)
-#     plt.imsave("data/reconstructed_image" + str(delta) + ".png", reconstructed_image,cmap = 'gray')
-#     img2 = cv2.imread("data/reconstructed_image" + str(delta) + ".png", 0)
-    # cv2.imshow('hjhj',img2)
-    # cv2.waitKey(0)
-#     Q.append(abs(Entropy(img) - Entropy(img2)))
-#     psnr.append(PSNR(img, decoded_img))
-#     file_size_2 = os.path.getsize("bit_stream" + str(delta) + ".txt")
-#     ratio.append(file_size / file_size_2)
-#
-# print(Q)
-# print(psnr)
-# print(ratio)
-# plt.figure("Rate-Distortion Optimization")
-# plt.plot(ratio, psnr)
-#
-# plt.show()
+
 def save_img(path,delta = 20):
     img = cv2.imread(path, 0)
     img = padding(img, block)
@@ -394,3 +260,7 @@ def save_img(path,delta = 20):
     reconstructed_image = get_img(decoded_img, img.shape)
     plt.imsave("data/reconstructed_image" + str(delta) + ".png", reconstructed_image, cmap='gray')
     return os.path.join('./','data/reconstructed_image'+str(delta)+".png")
+file_name = 'data/uncompressed.bmp'
+deltas = [20,50,90]
+for delta in deltas:
+    save_img(file_name,delta)

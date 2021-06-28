@@ -34,7 +34,7 @@
       <recent name="C:\Users\doank\PycharmProjects\predictive_encoding\data" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.gui">
+  <component name="RunManager" selected="Python.DPCM">
     <configuration name="DPCM" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="predictive_coding" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -121,9 +121,9 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.DPCM" />
         <item itemvalue="Python.gui" />
         <item itemvalue="Python.cc" />
-        <item itemvalue="Python.DPCM" />
         <item itemvalue="Python.huffman" />
       </list>
     </recent_temporary>
