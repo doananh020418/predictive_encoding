@@ -95,7 +95,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from huffman import *
-
+from zig_zag_scan import *
 
 def showImg(img):
     plt.figure()
@@ -182,7 +182,6 @@ def block_quantization(blocks, delta):
     q_matrix = QMatrix_generator(delta)
 
     for block in blocks:
-        print(block.shape)
         for i in range(block.shape[0]):
             for j in range(block.shape[0]):
                 block[i, j] = np.around(block[i, j] / q_matrix[i, j])
@@ -203,8 +202,8 @@ def get_img(blocks, img_shape):
         rowNcol.append(np.hstack(blocks[row:j]))
         row = j
     res = np.vstack(rowNcol)
-    # res[res>255]=255
-    # res[res<0]=0
+    res[res>255]=255
+    res[res<0]=0
 
     # showImg(res)
     return res
@@ -281,7 +280,8 @@ def dpcm(blocks, delta):
             err.append(tmp_err)
             re = recontruct[i - 1] + single_block_de_quantization(tmp_err, delta)
             recontruct.append(re)
-    return err
+
+    return np.ceil(np.asarray(err).astype(int)/1)*1
 
 
 def inv_dpcm(err, delta):
@@ -298,23 +298,29 @@ def encoder(img, delta):
     block_size = 8
     blocks = split_into_blocks(img, block_size)
     dct = DCT(blocks)
-    # q_dct = block_quantization(dct, delta)
+    #q_dct = block_quantization(dct, delta)
     #print(dct)
     q_pred = dpcm(dct,delta)
-    RL = runLength_encoding(np.array(q_pred))
+    zz= []
+    for block in q_pred:
+        zz.append(zigzag(block))
+    RL = runLength_encoding(np.array(zz))
     return RL
-
 
 def decoder(bit_stream, delta):
     RLD = runLength_decoding(bit_stream)
-    out = resh(RLD)
-    q_reconstruct = inv_dpcm(out, delta)
+    #out = resh(RLD)
+    inv_zz = []
+    block_size = 8
+    for i in range(0, len(RLD) - block_size * block_size + 1, block_size * block_size):
+        inv_zz.append(inverse_zigzag(np.array(RLD[i:i + block_size * block_size]), 8, 8))
+    q_reconstruct = inv_dpcm(inv_zz, delta)
+    #q_reconstruct = de_quantization(q_reconstruct,delta)
     out_idct = IDCT(q_reconstruct)
     #out_dq = de_quantization(out, delta)
 
     # get_img(out_idct)
     return out_idct
-
 
 def Entropy(data):
     data = data.flatten()  # Chuyen ve 1 chieu
@@ -325,47 +331,66 @@ def Entropy(data):
 
     return data_entropy
 
-img = cv2.imread("uncompressed.bmp", 0)
-# cv2.imwrite("land2_gray_org.bmp",img)
-# cv2.imshow("origin",img)
-img_shape = img.shape
-print(img_shape)
+block = 8
+# file_name = 'data/uncompressed.bmp'
+# img = cv2.imread(file_name, 0)
+# img = padding(img, block)
+# # cv2.imwrite("land2_gray_org.bmp",img)
+# # cv2.imshow("origin",img)
+# img_shape = img.shape
+# print(img_shape)
 
 
 import os
 
-file_size = os.path.getsize("uncompressed.bmp")
-Q = []
-psnr = []
-deltas = [90]
-ratio = []
-for delta in deltas:
-    bit_stream = encoder(img, delta)
-    HC = HuffmanCoding()
-    bit = HC.compress(bit_stream)
-
-    file1 = open("bit_stream" + str(delta) + ".txt", "wb")
-    file1.write(bit)
-    file1.close()
-
-    decoded_bit_stream = HC.decompress("bit_stream" + str(delta) + ".txt")
-
-    decoded_img = decoder(decoded_bit_stream, delta)
-    reconstructed_image = get_img(decoded_img, img_shape)
-    #cv2.imwrite("reconstructed_image" + str(delta) + ".png", reconstructed_image)
-    plt.imsave("reconstructed_image" + str(delta) + ".png", reconstructed_image,cmap = 'gray')
-    img2 = cv2.imread("reconstructed_image" + str(delta) + ".png", 0)
-    cv2.imshow('hjhj',img2)
-    cv2.waitKey(0)
-    Q.append(abs(Entropy(img) - Entropy(img2)))
-    psnr.append(PSNR(img, img2))
-    file_size_2 = os.path.getsize("bit_stream" + str(delta) + ".txt")
-    ratio.append(file_size / file_size_2)
-
-print(Q)
-print(psnr)
-print(ratio)
+# file_size = os.path.getsize(file_name)
+# Q = []
+# psnr = []
+# deltas = [90]
+# ratio = []
+# for delta in deltas:
+#     bit_stream = encoder(img, delta)
+#     HC = HuffmanCoding()
+#     bit = HC.compress(bit_stream)
+#
+#     file1 = open("data/bit_stream" + str(delta) + ".txt", "wb")
+#     file1.write(bit)
+#     file1.close()
+#
+#     decoded_bit_stream = HC.decompress("data/bit_stream" + str(delta) + ".txt")
+#
+#     decoded_img = decoder(decoded_bit_stream, delta)
+#     reconstructed_image = get_img(decoded_img, img_shape)
+#     plt.imsave("data/reconstructed_image" + str(delta) + ".png", reconstructed_image,cmap = 'gray')
+#     img2 = cv2.imread("data/reconstructed_image" + str(delta) + ".png", 0)
+    # cv2.imshow('hjhj',img2)
+    # cv2.waitKey(0)
+#     Q.append(abs(Entropy(img) - Entropy(img2)))
+#     psnr.append(PSNR(img, decoded_img))
+#     file_size_2 = os.path.getsize("bit_stream" + str(delta) + ".txt")
+#     ratio.append(file_size / file_size_2)
+#
+# print(Q)
+# print(psnr)
+# print(ratio)
 # plt.figure("Rate-Distortion Optimization")
 # plt.plot(ratio, psnr)
 #
 # plt.show()
+def save_img(path,delta = 20):
+    img = cv2.imread(path, 0)
+    img = padding(img, block)
+    bit_stream = encoder(img, delta)
+    HC = HuffmanCoding()
+    bit = HC.compress(bit_stream)
+
+    file1 = open("data/bit_stream" + str(delta) + ".txt", "wb")
+    file1.write(bit)
+    file1.close()
+
+    decoded_bit_stream = HC.decompress("data/bit_stream" + str(delta) + ".txt")
+
+    decoded_img = decoder(decoded_bit_stream, delta)
+    reconstructed_image = get_img(decoded_img, img.shape)
+    plt.imsave("data/reconstructed_image" + str(delta) + ".png", reconstructed_image, cmap='gray')
+    return os.path.join('./','data/reconstructed_image'+str(delta)+".png")
